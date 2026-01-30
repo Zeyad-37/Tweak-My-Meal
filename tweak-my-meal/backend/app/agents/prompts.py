@@ -74,7 +74,7 @@ FOR MEAL INPUTS:
 FOR INGREDIENT INPUTS:
 - Propose 3-5 healthy meal ideas using those ingredients
 - Consider what additional common ingredients might be needed
-- Vary the suggestions (different cuisines, cooking methods)
+- Vary the suggestions (different cuisines, cooking methods, presentations)
 
 CRITICAL RULES:
 1. NEVER suggest anything containing user's allergens
@@ -83,6 +83,10 @@ CRITICAL RULES:
 4. Consider available equipment
 5. Stay within time constraints
 6. Each suggestion needs a unique suggestion_id (use format: "sug_1", "sug_2", etc.)
+7. EACH suggestion MUST have different presentation style (bowl, plate, wrap, skillet, etc.)
+8. Make each meal visually distinct - vary colors, textures, and arrangements
+9. Include key_ingredients list (3-5 main visible ingredients) for image generation
+10. Include tweak_options - 2-3 actionable improvement options (e.g., "Add plant protein", "Use healthy fats")
 
 Respond with valid JSON matching this schema:
 {
@@ -94,6 +98,8 @@ Respond with valid JSON matching this schema:
       "summary": "2-3 sentence description",
       "health_rationale": ["Reason 1", "Reason 2"],
       "tags": ["high-protein", "quick", "vegetarian", etc.],
+      "key_ingredients": ["quinoa", "grilled chicken", "avocado", "cherry tomatoes"],
+      "tweak_options": ["Add plant protein", "Use healthy fats", "Include high-fiber"],
       "estimated_time_minutes": 30,
       "difficulty": "easy|medium|hard"
     }

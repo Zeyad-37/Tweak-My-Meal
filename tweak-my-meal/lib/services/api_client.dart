@@ -129,6 +129,37 @@ class ApiClient {
     return ApiResponse.fromJson(jsonDecode(response.body));
   }
 
+  /// Get suggestion images (poll for async image generation)
+  Future<ApiResponse> getSuggestionImages({
+    required String sessionId,
+    String userId = 'user_0001',
+  }) async {
+    final response = await http.get(
+      Uri.parse('$baseUrl/api/chat/images/$sessionId?user_id=$userId'),
+    );
+    return ApiResponse.fromJson(jsonDecode(response.body));
+  }
+
+  /// Modify the current analysis with additional ingredients/preferences
+  Future<ApiResponse> modifyAnalysis({
+    required String sessionId,
+    required String modification,
+    String userId = 'user_0001',
+  }) async {
+    final request = http.MultipartRequest(
+      'POST',
+      Uri.parse('$baseUrl/api/chat/modify'),
+    );
+    
+    request.fields['user_id'] = userId;
+    request.fields['session_id'] = sessionId;
+    request.fields['modification'] = modification;
+    
+    final streamedResponse = await request.send();
+    final response = await http.Response.fromStream(streamedResponse);
+    return ApiResponse.fromJson(jsonDecode(response.body));
+  }
+
   // ============================================================================
   // Feedback
   // ============================================================================
@@ -167,6 +198,130 @@ class ApiClient {
   }) async {
     final response = await http.get(
       Uri.parse('$baseUrl/api/history?user_id=$userId&limit=$limit&offset=$offset'),
+    );
+    return ApiResponse.fromJson(jsonDecode(response.body));
+  }
+
+  // ============================================================================
+  // Home Screen Data
+  // ============================================================================
+
+  /// Get all home screen data in one call
+  Future<ApiResponse> getHomeData({String userId = 'user_0001'}) async {
+    final response = await http.get(
+      Uri.parse('$baseUrl/api/home/home-data?user_id=$userId'),
+    );
+    return ApiResponse.fromJson(jsonDecode(response.body));
+  }
+
+  /// Get daily tip
+  Future<ApiResponse> getDailyTip({String userId = 'user_0001'}) async {
+    final response = await http.get(
+      Uri.parse('$baseUrl/api/home/daily-tip?user_id=$userId'),
+    );
+    return ApiResponse.fromJson(jsonDecode(response.body));
+  }
+
+  /// Get today's meals
+  Future<ApiResponse> getTodaysMeals({String userId = 'user_0001'}) async {
+    final response = await http.get(
+      Uri.parse('$baseUrl/api/home/todays-meals?user_id=$userId'),
+    );
+    return ApiResponse.fromJson(jsonDecode(response.body));
+  }
+
+  /// Save tweak selections as preferences
+  Future<ApiResponse> saveTweakSelection({
+    required String suggestionId,
+    required List<String> selectedTweaks,
+    String userId = 'user_0001',
+  }) async {
+    final response = await http.post(
+      Uri.parse('$baseUrl/api/home/tweak-selection?user_id=$userId&suggestion_id=$suggestionId'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'selected_tweaks': selectedTweaks,
+      }),
+    );
+    return ApiResponse.fromJson(jsonDecode(response.body));
+  }
+
+  /// Refresh suggested bites after profile/preference changes
+  Future<ApiResponse> refreshSuggestedBites({String userId = 'user_0001'}) async {
+    final response = await http.post(
+      Uri.parse('$baseUrl/api/home/refresh-suggestions?user_id=$userId'),
+    );
+    return ApiResponse.fromJson(jsonDecode(response.body));
+  }
+
+  /// Get images for suggested bites (poll for async image generation)
+  Future<ApiResponse> getBiteImages({String userId = 'user_0001'}) async {
+    final response = await http.get(
+      Uri.parse('$baseUrl/api/home/bite-images?user_id=$userId'),
+    );
+    return ApiResponse.fromJson(jsonDecode(response.body));
+  }
+
+  // ============================================================================
+  // Conversation (Persistent Chat)
+  // ============================================================================
+
+  /// Get chat history
+  Future<ApiResponse> getChatHistory({String userId = 'user_0001'}) async {
+    final response = await http.get(
+      Uri.parse('$baseUrl/api/conversation/history?user_id=$userId'),
+    );
+    return ApiResponse.fromJson(jsonDecode(response.body));
+  }
+
+  /// Send a chat message
+  Future<ApiResponse> sendChatMessage({
+    required String message,
+    String userId = 'user_0001',
+  }) async {
+    final response = await http.post(
+      Uri.parse('$baseUrl/api/conversation/send'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'user_id': userId,
+        'message': message,
+      }),
+    );
+    return ApiResponse.fromJson(jsonDecode(response.body));
+  }
+
+  /// Clear chat history
+  Future<ApiResponse> clearChatHistory({String userId = 'user_0001'}) async {
+    final response = await http.post(
+      Uri.parse('$baseUrl/api/conversation/clear?user_id=$userId'),
+    );
+    return ApiResponse.fromJson(jsonDecode(response.body));
+  }
+
+  // ============================================================================
+  // Journal
+  // ============================================================================
+
+  /// Get weekly journal data (reflections + wisdom)
+  Future<ApiResponse> getWeeklyJournal({String userId = 'user_0001'}) async {
+    final response = await http.get(
+      Uri.parse('$baseUrl/api/journal/weekly?user_id=$userId'),
+    );
+    return ApiResponse.fromJson(jsonDecode(response.body));
+  }
+
+  /// Add a reflection
+  Future<ApiResponse> addReflection({
+    required String text,
+    String userId = 'user_0001',
+  }) async {
+    final response = await http.post(
+      Uri.parse('$baseUrl/api/journal/reflection'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'user_id': userId,
+        'text': text,
+      }),
     );
     return ApiResponse.fromJson(jsonDecode(response.body));
   }

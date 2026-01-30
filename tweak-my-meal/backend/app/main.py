@@ -4,9 +4,12 @@ Main application entry point
 """
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
+from pathlib import Path
 
 from .config import settings
-from .routers import user_router, chat_router, feedback_router, history_router
+from .routers import user_router, chat_router, feedback_router, history_router, home_router, conversation_router, journal_router
 
 # Create app
 app = FastAPI(
@@ -29,6 +32,9 @@ app.include_router(user_router)
 app.include_router(chat_router)
 app.include_router(feedback_router)
 app.include_router(history_router)
+app.include_router(home_router)
+app.include_router(conversation_router)
+app.include_router(journal_router)
 
 
 @app.get("/")
@@ -45,6 +51,15 @@ async def root():
 async def health():
     """Health check for monitoring"""
     return {"status": "healthy"}
+
+
+@app.get("/images/{user_id}/{filename}")
+async def get_image(user_id: str, filename: str):
+    """Serve user images"""
+    image_path = settings.user_images_dir(user_id) / filename
+    if image_path.exists():
+        return FileResponse(image_path, media_type="image/jpeg")
+    return {"error": "Image not found"}
 
 
 # Run with: uvicorn app.main:app --host 127.0.0.1 --port 8080 --reload

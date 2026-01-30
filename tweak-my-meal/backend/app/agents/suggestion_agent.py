@@ -85,6 +85,17 @@ class SuggestionAgent:
             memories_str = "; ".join([m["text"] for m in memories[:3]])
             prompt_parts.append(f"Relevant memories: {memories_str}")
         
+        # User modifications (added ingredients, etc)
+        modification_request = user_context.get("modification_request")
+        if modification_request:
+            prompt_parts.append(f"\n## User Modification Request")
+            prompt_parts.append(f"User wants to add/include: {modification_request}")
+            prompt_parts.append("IMPORTANT: Incorporate these additions into all suggestions!")
+        
+        all_modifications = user_context.get("all_modifications", [])
+        if all_modifications:
+            prompt_parts.append(f"All requested additions: {', '.join(all_modifications)}")
+        
         prompt_parts.append("\nGenerate suggestions as JSON.")
         prompt = "\n".join(prompt_parts)
         

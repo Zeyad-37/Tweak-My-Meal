@@ -63,7 +63,8 @@ CREATE TABLE IF NOT EXISTS meals (
   vision_result_json TEXT,
   suggestion_id TEXT,
   recipe_json TEXT NOT NULL,
-  tags_json TEXT NOT NULL DEFAULT '[]'
+  tags_json TEXT NOT NULL DEFAULT '[]',
+  generated_image_path TEXT
 );
 
 CREATE INDEX IF NOT EXISTS idx_meals_user_created
@@ -126,6 +127,21 @@ class Database:
         # Initialize schema
         await self._connection.executescript(DDL)
         await self._connection.commit()
+        
+        # Run migrations for existing databases
+        await self._run_migrations()
+
+    async def _run_migrations(self):
+        """Run migrations for existing databases"""
+        try:
+            # Add generated_image_path column if it doesn't exist
+            await self._connection.execute(
+                "ALTER TABLE meals ADD COLUMN generated_image_path TEXT"
+            )
+            await self._connection.commit()
+        except Exception:
+            # Column already exists, ignore
+            pass
 
     async def close(self):
         if self._connection:
@@ -269,13 +285,14 @@ class Database:
         input_image_paths: list[str] = None,
         vision_result_json: Optional[str] = None,
         suggestion_id: Optional[str] = None,
+        generated_image_path: Optional[str] = None,
     ):
         await self.conn.execute(
             """INSERT INTO meals (
                 meal_id, user_id, created_at, title, source_kind, input_text,
                 input_image_paths_json, vision_result_json, suggestion_id,
-                recipe_json, tags_json
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                recipe_json, tags_json, generated_image_path
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
             (
                 meal_id,
                 user_id,
@@ -288,6 +305,7 @@ class Database:
                 suggestion_id,
                 recipe_json,
                 json.dumps(tags),
+                generated_image_path,
             )
         )
         await self.conn.commit()
@@ -412,7 +430,7 @@ class Database:
 
     async def get_history(self, user_id: str, limit: int = 50, offset: int = 0) -> list[dict]:
         cursor = await self.conn.execute(
-            """SELECT m.meal_id, m.created_at, m.title, m.tags_json,
+            """SELECT m.meal_id, m.created_at, m.title, m.tags_json, m.generated_image_path,
                       o.liked, o.cooked_again, o.tags_json as outcome_tags_json
                FROM meals m
                LEFT JOIN meal_outcomes o ON m.meal_id = o.meal_id
@@ -429,6 +447,9 @@ class Database:
             d.pop("outcome_tags_json", None)
             d["liked"] = bool(d["liked"]) if d["liked"] is not None else None
             d["cooked_again"] = bool(d["cooked_again"]) if d["cooked_again"] is not None else None
+            # Convert local path to URL-friendly format if exists
+            if d.get("generated_image_path"):
+                d["image_path"] = d["generated_image_path"]
             result.append(d)
         return result
 

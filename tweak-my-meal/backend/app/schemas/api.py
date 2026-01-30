@@ -112,6 +112,7 @@ class RecipeResponse(BaseModel):
     session_id: str
     meal_id: str
     recipe: RecipeResult
+    image_url: Optional[str] = None
 
 
 # ============================================================================

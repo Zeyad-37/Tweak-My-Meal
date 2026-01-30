@@ -133,3 +133,65 @@ async def chat_select(request: ChatSelectRequest):
         return ApiResponse.failure("VALIDATION_ERROR", str(e))
     except Exception as e:
         return ApiResponse.failure("MODEL_ERROR", str(e))
+
+
+@router.get("/images/{session_id}", response_model=ApiResponse)
+async def get_suggestion_images(
+    session_id: str,
+    user_id: str = "user_0001",
+):
+    """
+    Get generated images for suggestions in a session.
+    Frontend can poll this while images are generating.
+    """
+    try:
+        db = await get_db(user_id)
+        state = await db.get_session_state(session_id)
+        
+        if not state:
+            return ApiResponse.failure("NOT_FOUND", "Session not found")
+        
+        suggestion_images = state.get("suggestion_images", {})
+        suggestions = state.get("suggestions", [])
+        
+        return ApiResponse.success({
+            "images": suggestion_images,
+            "total_suggestions": len(suggestions),
+            "images_ready": len(suggestion_images),
+            "all_ready": len(suggestion_images) >= len(suggestions) if suggestions else False,
+        })
+        
+    except Exception as e:
+        return ApiResponse.failure("INTERNAL_ERROR", str(e))
+
+
+@router.post("/modify", response_model=ApiResponse)
+async def chat_modify(
+    user_id: str = Form(default="user_0001"),
+    session_id: str = Form(...),
+    modification: str = Form(...),
+):
+    """
+    Modify the current meal analysis with additional ingredients/preferences.
+    Regenerates suggestions using the existing session context plus the modification.
+    """
+    try:
+        # Ensure user exists
+        db = await get_db(user_id)
+        await db.ensure_user(user_id)
+        
+        # Create orchestrator
+        orchestrator = Orchestrator(user_id)
+        
+        # Process modification
+        result = await orchestrator.process_modification(
+            session_id=session_id,
+            modification=modification,
+        )
+        
+        return ApiResponse.success(result)
+        
+    except ValueError as e:
+        return ApiResponse.failure("VALIDATION_ERROR", str(e))
+    except Exception as e:
+        return ApiResponse.failure("INTERNAL_ERROR", str(e))

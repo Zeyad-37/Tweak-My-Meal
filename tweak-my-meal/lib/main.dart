@@ -7,10 +7,9 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'core/theme.dart';
 import 'providers/user_provider.dart';
 import 'providers/meal_provider.dart';
-import 'ui/screens/onboarding_chat_screen.dart';
+import 'ui/screens/home_screen.dart';
 import 'ui/screens/dashboard_screen.dart';
 import 'ui/screens/planner_screen.dart';
-import 'ui/screens/chat_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -42,19 +41,15 @@ void main() async {
 
 // Router Setup
 final _router = GoRouter(
-  initialLocation: '/onboarding',
+  initialLocation: '/',
   routes: [
     GoRoute(
-      path: '/onboarding',
-      builder: (context, state) => const OnboardingChatScreen(),
+      path: '/',
+      builder: (context, state) => const HomeScreen(),
     ),
     GoRoute(
       path: '/dashboard',
       builder: (context, state) => const DashboardScreen(),
-    ),
-    GoRoute(
-      path: '/chat',
-      builder: (context, state) => const ChatScreen(),
     ),
     GoRoute(
       path: '/planner',

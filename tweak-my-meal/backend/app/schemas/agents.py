@@ -39,9 +39,12 @@ class Suggestion(BaseModel):
     summary: str
     health_rationale: list[str] = Field(default_factory=list)
     tags: list[str] = Field(default_factory=list)
+    key_ingredients: list[str] = Field(default_factory=list)  # Main 3-5 ingredients for image generation
+    tweak_options: list[str] = Field(default_factory=list)  # Improvement options like "Add plant protein"
     estimated_time_minutes: int = 30
     difficulty: Literal["easy", "medium", "hard"] = "medium"
     requires_user_choice: bool = True
+    image_url: Optional[str] = None
 
 
 class SuggestionsResult(BaseModel):

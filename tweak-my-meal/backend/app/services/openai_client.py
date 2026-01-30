@@ -119,6 +119,26 @@ class OpenAIClient:
         content = self._clean_json(content)
         return json.loads(content)
 
+    async def generate_image(
+        self,
+        prompt: str,
+        size: str = "1024x1024",
+        quality: str = "standard",
+    ) -> Optional[str]:
+        """Generate an image using DALL-E and return the URL"""
+        try:
+            response = await self.client.images.generate(
+                model="dall-e-3",
+                prompt=prompt,
+                size=size,
+                quality=quality,
+                n=1,
+            )
+            return response.data[0].url
+        except Exception as e:
+            print(f"Image generation failed: {e}")
+            return None
+
     async def embed(self, texts: list[str]) -> list[list[float]]:
         """Generate embeddings for texts"""
         response = await self.client.embeddings.create(
